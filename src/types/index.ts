@@ -44,6 +44,7 @@ export interface GameState {
   winningCells: Position[];
   gameOver: boolean;
   lastMove: Position | null;
+  gameId?: string;
 }
 
 export interface GameRules {

@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
 import { PLAYER, Position, GameState, Player } from "@/types";
 import {
   createEmptyBoard,
   checkWin,
-  checkDraw,
 } from "@/components/game/game-logic";
 import { GameBoard } from "@/components/game/game-board";
 import { GameInfo } from "@/components/game/game-info";
@@ -15,7 +14,6 @@ import { SurrenderDialog } from "@/components/dialogs/surrender-dialog";
 import { WinDialog } from "@/components/dialogs/win-dialog";
 import { useGameConfig } from "@/store/game-config";
 import React from "react";
-import { getAIMove } from "@/services/api";
 import useSound from "use-sound";
 
 interface GomokuBoardProps {
@@ -30,7 +28,6 @@ interface GomokuBoardProps {
 export default function GomokuBoard({
   isAIGame = false,
   aiPlayer = PLAYER.WHITE,
-  onAIMove,
 }: GomokuBoardProps) {
   const router = useRouter();
   const { boardSize, gameRules, setBoardSize, setGameRules, setAiPlayer } =
@@ -61,13 +58,11 @@ export default function GomokuBoard({
   const [hoverPosition] = useState<Position | null>(null);
 
   // AI state
-  const [aiThinking, setAiThinking] = useState(false);
 
   const handleCellClick = (row: number, col: number) => {
     if (
       gameState.board[row][col] !== PLAYER.NONE ||
-      gameState.gameOver ||
-      aiThinking
+      gameState.gameOver
     )
       return;
     if (isAIGame && gameState.currentPlayer === aiPlayer) return;
@@ -123,114 +118,7 @@ export default function GomokuBoard({
     }
   };
 
-  const handleAIMove = useCallback(async () => {
-    if (gameState.gameOver || !isAIGame || gameState.currentPlayer !== aiPlayer)
-      return;
 
-    setAiThinking(true);
-    try {
-      const response = await getAIMove({
-        board: gameState.board,
-        current_player: gameState.currentPlayer,
-        game_rules: {
-          exactlyFiveRule: gameRules.exactlyFiveRule,
-          noBlockedWinsRule: gameRules.noBlockedWinsRule,
-        },
-      });
-
-      const { move } = response.data;
-
-      if (onAIMove) {
-        onAIMove(move, []);
-      }
-
-      const newBoard = gameState.board.map((rowArray) => [...rowArray]);
-      newBoard[move.row][move.col] = gameState.currentPlayer;
-
-      playMove();
-
-      const winResult = checkWin(
-        newBoard,
-        move.row,
-        move.col,
-        gameState.currentPlayer,
-        boardSize,
-        gameRules.exactlyFiveRule,
-        gameRules.noBlockedWinsRule
-      );
-
-      if (winResult.isWin) {
-        setGameState({
-          ...gameState,
-          board: newBoard,
-          gameOver: true,
-          winner: gameState.currentPlayer,
-          winningCells: winResult.winningCells,
-          lastMove: move,
-        });
-        setShowWinDialog(true);
-        playWin();
-
-        setTimeout(() => {
-          confetti({
-            particleCount: 200,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        }, 100);
-      } else if (checkDraw(newBoard)) {
-        setGameState({
-          ...gameState,
-          board: newBoard,
-          gameOver: true,
-          winner: 0,
-          lastMove: move,
-        });
-      } else {
-        setGameState({
-          ...gameState,
-          board: newBoard,
-          currentPlayer:
-            gameState.currentPlayer === PLAYER.BLACK
-              ? PLAYER.WHITE
-              : PLAYER.BLACK,
-          lastMove: move,
-        });
-      }
-    } catch (error) {
-      console.error("Error getting AI move:", error);
-    } finally {
-      setAiThinking(false);
-    }
-  }, [
-    gameState,
-    isAIGame,
-    aiPlayer,
-    boardSize,
-    gameRules,
-    onAIMove,
-    playMove,
-    playWin,
-  ]);
-
-  useEffect(() => {
-    const shouldMakeAIMove =
-      isAIGame &&
-      !gameState.gameOver &&
-      !aiThinking &&
-      gameState.currentPlayer === aiPlayer;
-
-    if (shouldMakeAIMove) {
-      handleAIMove();
-    }
-  }, [
-    gameState.currentPlayer,
-    gameState.gameOver,
-    isAIGame,
-    aiThinking,
-    aiPlayer,
-    handleAIMove,
-  ]);
 
   const handleRedoMove = () => {
     if (moveHistory.length > 0) {
@@ -291,12 +179,12 @@ export default function GomokuBoard({
       <GameInfo
         currentPlayer={gameState.currentPlayer}
         gameOver={gameState.gameOver}
-        aiThinking={aiThinking}
+        aiThinking={false}
       />
 
       <GameControls
         gameOver={gameState.gameOver}
-        aiThinking={aiThinking}
+        aiThinking={false}
         onBackToMenu={() => router.push("/")}
         onSurrender={() => setShowConfirmSurrender(true)}
         onReset={resetGame}

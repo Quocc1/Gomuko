@@ -4,5 +4,4 @@ export const BOARD_SIZES = [
   { value: 13, label: "13x13 (Large)" },
   { value: 15, label: "15x15 (Standard)" },
   { value: 19, label: "19x19 (Extra Large)" },
-  { value: 30, label: "30x30 (Huge)" },
 ];

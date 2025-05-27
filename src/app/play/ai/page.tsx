@@ -1,5 +1,5 @@
 "use client";
-import Board from "@/components/board";
+import BoardAI from "@/components/board-ai";
 import { PLAYER } from "@/types";
 import { Suspense } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ export default function AIGamePage() {
       <div className="container mx-auto p-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1">
-            <Board isAIGame={true} aiPlayer={PLAYER.WHITE} />
+            <BoardAI isAIGame={true} aiPlayer={PLAYER.WHITE} />
           </div>
         </div>
       </div>

@@ -24,20 +24,16 @@ export interface RoomDetail {
   host_client_id: string;
 }
 
+
 export interface AIMoveRequest {
-  board: number[][];
-  current_player: number;
-  game_rules: {
-    exactlyFiveRule: boolean;
-    noBlockedWinsRule: boolean;
-  };
+  game_id?: string;
+  command: string;
 }
 
+
 export interface AIMoveResponse {
-  move: {
-    row: number;
-    col: number;
-  };
+  game_id: string;
+  move: string;
 }
 
 export const createRoom = (data: RoomCreateRequest) =>
@@ -53,6 +49,7 @@ export const deleteRoomApi = (roomName: string) =>
 
 export const getAIMove = (data: AIMoveRequest) =>
   apiClient.post<AIMoveResponse>("/ai/move", data);
+
 
 // React Query hooks
 export const useCreateRoom = () => {
